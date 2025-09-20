@@ -12,9 +12,13 @@ echo ""
 echo "📦 安装基本依赖包..."
 pip install trimesh open3d numpy tqdm pyyaml
 
+# 安装训练相关依赖
+echo "📦 安装训练依赖..."
+pip install torch torchvision munch easydict
+
 # 安装额外的几何处理依赖
 echo "📦 安装额外依赖..."
-pip install scipy matplotlib
+pip install scipy matplotlib tensorpack
 
 # 验证安装
 echo ""
