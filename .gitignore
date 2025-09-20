@@ -112,3 +112,6 @@ venv.bak/
 ##################
 # mypy
 #.mypy_cache/
+data_prepare
+PoinTr
+._*

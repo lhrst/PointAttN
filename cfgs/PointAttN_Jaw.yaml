@@ -1,0 +1,39 @@
+# PointAttN配置文件 - 牙列数据专用
+# 基于原始PointAttN.yaml，针对牙列数据进行优化
+
+# 训练参数
+batch_size: 16                    # 牙列数据相对复杂，减小batch size
+workers: 4                       # 增加数据加载进程
+nepoch: 300                      # 训练轮数，可根据收敛情况调整
+model_name: PointAttN
+load_model: null                 # 从头开始训练，如需继续训练请指定模型路径
+start_epoch: 0
+num_points: 2048                 # 与预处理脚本中的N_POINTS保持一致
+work_dir: log/jaw_experiments/   # 牙列实验专用日志目录
+flag: jaw_lower                  # 实验标识
+loss: cd                         # 使用Chamfer Distance损失
+manual_seed: 42                  # 固定随机种子，确保可复现性
+step_interval_to_print: 50       # 更频繁地打印训练状态
+epoch_interval_to_save: 10       # 每10个epoch保存一次模型
+epoch_interval_to_val: 5         # 每5个epoch验证一次
+
+# 学习率设置
+lr: 0.0005                       # 稍微提高初始学习率
+lr_decay: True
+lr_decay_interval: 30            # 更频繁的学习率衰减
+lr_decay_rate: 0.8               # 稍微温和的衰减率
+lr_step_decay_epochs: null
+lr_step_decay_rates: null
+lr_clip: 1.e-6
+optimizer: Adam
+weight_decay: 1.e-4              # 添加权重衰减防止过拟合
+betas: 0.9, 0.999
+
+# 设备和数据集
+device: '0'                      # GPU设备ID
+dataset: 'pcn'                   # 使用PCN数据加载器
+pcnpath: ./processed_jaw_data    # 预处理后的牙列数据路径
+c3dpath: null                    # 不使用C3D数据
+
+# 测试和可视化
+save_vis: True                   # 保存可视化结果，便于观察效果
