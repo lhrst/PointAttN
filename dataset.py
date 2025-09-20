@@ -22,13 +22,20 @@ class PCN_pcd(data.Dataset):
             raise ValueError("ValueError prefix should be [train/val/test] ")
 
         self.prefix = prefix
+        # 原始ShapeNet标签映射
         self.label_map ={'02691156': '0', '02933112': '1', '02958343': '2',
                          '03001627': '3', '03636649': '4', '04256520': '5',
                          '04379243': '6', '04530566': '7', 'all': '8'}
-        
+
+        # 添加牙列数据的标签映射
+        self.label_map['000'] = '0'  # LowerJaw -> 0
+
         self.label_map_inverse ={'0': '02691156', '1': '02933112', '2': '02958343',
                          '3': '03001627', '4': '03636649', '5': '04256520',
                          '6': '04379243', '7': '04530566', '8': 'all'}
+
+        # 添加牙列数据的逆向映射
+        self.label_map_inverse['0'] = '000'  # 如果需要牙列数据时
 
         self.input_data, self.labels = self.get_data(os.path.join(self.file_path, 'partial'))
 
