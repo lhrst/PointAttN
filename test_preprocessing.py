@@ -12,6 +12,7 @@ import numpy as np
 import open3d as o3d
 from pathlib import Path
 import random
+from excluded_samples import EXCLUDED_SAMPLE_IDS, is_sample_excluded, get_excluded_count
 
 def test_single_sample():
     """
@@ -33,8 +34,10 @@ def test_single_sample():
                 json_path = os.path.join(instance_path, "modified_seg.json")
 
                 if os.path.exists(obj_path) and os.path.exists(json_path):
-                    test_sample = (instance_path, instance_id, obj_path, json_path)
-                    break
+                    # 确保测试样本不在排除列表中
+                    if not is_sample_excluded(instance_id):
+                        test_sample = (instance_path, instance_id, obj_path, json_path)
+                        break
 
         if test_sample:
             break
@@ -204,12 +207,19 @@ def check_data_structure():
     jaw_dirs = ["lower_jaw1", "lower_jaw2", "lower_jaw3"]
     found_dirs = []
     total_samples = 0
+    excluded_samples = 0
 
     for jaw_dir in jaw_dirs:
         jaw_path = os.path.join(RAW_DATA_DIR, jaw_dir)
         if os.path.exists(jaw_path):
             found_dirs.append(jaw_dir)
             samples = [d for d in os.listdir(jaw_path) if os.path.isdir(os.path.join(jaw_path, d))]
+
+            # 检查排除的样本
+            for sample_id in samples:
+                if is_sample_excluded(sample_id):
+                    excluded_samples += 1
+
             total_samples += len(samples)
             print(f"   ✅ {jaw_dir}: {len(samples)} 样本")
         else:
@@ -219,8 +229,14 @@ def check_data_structure():
         print("   ❌ 没有找到任何jaw目录")
         return False
 
-    print(f"   📊 总计: {total_samples} 样本 in {len(found_dirs)} 目录")
-    return total_samples > 0
+    valid_samples = total_samples - excluded_samples
+    print(f"   📊 样本统计:")
+    print(f"      总样本: {total_samples}")
+    print(f"      排除样本: {excluded_samples}")
+    print(f"      有效样本: {valid_samples}")
+    print(f"      排除率: {excluded_samples/total_samples*100:.1f}%" if total_samples > 0 else "      排除率: 0%")
+
+    return valid_samples > 0
 
 def main():
     """

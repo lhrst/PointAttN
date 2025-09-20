@@ -22,6 +22,7 @@ import shutil
 from pathlib import Path
 import multiprocessing
 from functools import partial
+from excluded_samples import EXCLUDED_SAMPLE_IDS, is_sample_excluded
 
 # 配置参数
 RAW_DATA_DIR = "data_prepare/重标注后完整牙列lower_jaw"
@@ -250,9 +251,11 @@ def process_single_sample(args):
 
 def collect_all_samples():
     """
-    收集所有样本信息
+    收集所有样本信息，排除有问题的样本
     """
     samples = []
+    excluded_count = 0
+    total_found = 0
 
     for jaw_dir in ["lower_jaw1", "lower_jaw2", "lower_jaw3"]:
         jaw_path = os.path.join(RAW_DATA_DIR, jaw_dir)
@@ -268,9 +271,22 @@ def collect_all_samples():
                 json_path = os.path.join(instance_path, "modified_seg.json")
 
                 if os.path.exists(obj_path) and os.path.exists(json_path):
+                    total_found += 1
+
+                    # 检查是否在排除列表中
+                    if is_sample_excluded(instance_id):
+                        excluded_count += 1
+                        print(f"❌ 排除样本: {instance_id}")
+                        continue
+
                     samples.append((instance_path, instance_id))
 
-    print(f"Found {len(samples)} valid samples")
+    print(f"📊 样本统计:")
+    print(f"   总发现样本: {total_found}")
+    print(f"   排除样本: {excluded_count}")
+    print(f"   有效样本: {len(samples)}")
+    print(f"   排除率: {excluded_count/total_found*100:.1f}%" if total_found > 0 else "   排除率: 0%")
+
     return samples
 
 def create_dataset_metadata(output_dir, train_samples, test_samples):

@@ -8,6 +8,8 @@
 ### 数据预处理
 - **`preprocess_jaw_data.py`** - 主要预处理脚本
 - **`test_preprocessing.py`** - 环境和数据测试脚本
+- **`excluded_samples.py`** - 排除样本列表（107个有问题的样本）
+- **`test_exclusion.py`** - 排除功能测试脚本
 
 ### 配置文件
 - **`cfgs/PointAttN_Jaw.yaml`** - 牙列数据专用配置文件
@@ -29,13 +31,16 @@
 
 ### 分步运行
 ```bash
-# 1. 测试环境
+# 1. 测试排除功能
+python test_exclusion.py
+
+# 2. 测试环境
 python test_preprocessing.py
 
-# 2. 数据预处理
+# 3. 数据预处理
 python preprocess_jaw_data.py
 
-# 3. 开始训练
+# 4. 开始训练
 python train_jaw.py --config cfgs/PointAttN_Jaw.yaml
 ```
 
