@@ -1,95 +1,133 @@
-# PointAttN
+# PointAttN - 牙列补全项目
 
-News：Our paper has been accepted by AAAI-2024.
+基于PointAttN的点云补全模型，专门用于牙列下半部分缺失的预测和补全。
 
-## 1. Environment setup
+## 🚀 快速开始
 
-### Install related libraries
+### 完整设置（推荐）
+```bash
+# 一键安装所有依赖并测试环境
+./setup.sh
+```
 
-This code has been tested on Ubuntu 20.04, python 3.8.12, torch 1.9.0 and cuda 11.2. Please install related libraries before running this code:
+### 一键训练
+```bash
+# 完整训练流程（预处理 + 训练）
+./run_jaw_training.sh
+```
+
+### 分步运行
+```bash
+# 1. 测试环境
+python test_preprocessing.py
+
+# 2. 数据预处理
+python preprocess_jaw_data.py
+
+# 3. 开始训练
+python train_jaw.py --config cfgs/PointAttN_Jaw.yaml
+```
+
+## 📁 项目结构
 
 ```
+PointAttN/
+├── setup.sh                 # 完整环境设置脚本
+├── run_jaw_training.sh      # 一键训练脚本
+├── preprocess_jaw_data.py   # 数据预处理脚本（快速版本）
+├── train_jaw.py             # 牙列专用训练脚本
+├── test_preprocessing.py     # 预处理测试脚本
+├── test_exclusion.py        # 排除功能测试脚本
+├── excluded_samples.py      # 排除样本列表
+├── cfgs/
+│   ├── PointAttN_Jaw.yaml  # 牙列训练配置
+│   └── PointAttN.yaml      # 原始配置
+├── models/                  # 模型定义
+├── utils/                   # 工具函数
+└── dataset.py              # 数据加载器
+```
+
+## 🔧 环境要求
+
+### 自动安装（推荐）
+```bash
+./setup.sh  # 自动安装所有依赖并测试环境
+```
+
+### 手动安装
+```bash
 pip install -r requirements.txt
-```
 
-### Compile Pytorch 3rd-party modules
-
-please compile Pytorch 3rd-party modules [ChamferDistancePytorch](https://github.com/ThibaultGROUEIX/ChamferDistancePytorch) and [mm3d_pn2](https://github.com/Colin97/MSN-Point-Cloud-Completion). A simple way is using the following command:
-
-```
-cd $PointAttN_Home/utils/ChamferDistancePytorch/chamfer3D
+# 编译第三方模块
+cd utils/ChamferDistancePytorch/chamfer3D
 python setup.py install
 
-cd $PointAttN_Home/utils/mm3d_pn2
+cd utils/mm3d_pn2
 python setup.py build_ext --inplace
 ```
 
-## 2. Train
+## 📊 数据预处理
 
-### Prepare training datasets
+预处理脚本会将牙列OBJ文件转换为点云格式，并生成训练所需的完整和部分点云数据。
 
-Download the datasets:
+**主要功能：**
+- 自动排除有问题的样本（107个）
+- Z坐标分割生成部分点云（模拟下半部分缺失）
+- 随机牙齿移除增加数据多样性
+- 8:2分割训练集和测试集
 
-+ [PCN(raw data)](https://drive.google.com/drive/folders/1P_W1tz5Q4ZLapUifuOE4rFAZp6L1XTJz)
-+ [PCN(processed data)](https://gateway.infinitescript.com/?fileName=ShapeNetCompletion)
-+ [Completion3D](https://completion3d.stanford.edu/)
-
-### Train a model
-
-To train the PointAttN model, modify the dataset path in `cfgs/PointAttN.yaml `, run:
-
+**输出结构：**
 ```
-python train.py -c PointAttN.yaml
-```
-
-## 3. Test
-
-### Pretrained models
-
-The pretrained models on Completion3D and PCN benchmark are available as follows:
-
-|   dataset    | performance |                          model link                          |
-| :----------: | :---------: | :----------------------------------------------------------: |
-| Completion3D |  CD = 6.63  | [[BaiDuYun](https://pan.baidu.com/s/17-BZr3QvHYjEVMjPuXHXTg)] (code：nf0m)[[GoogleDrive](https://drive.google.com/drive/folders/1uw0oJ731uLjDpZ82Gp7ILisjeOrNdiHK?usp=sharing)] |
-|     PCN      |  CD = 6.86  | [[BaiDuYun](https://pan.baidu.com/s/187GjKO2qEQFWlroG1Mma2g)] (code：kmju)[[GoogleDrive](https://drive.google.com/drive/folders/1uw0oJ731uLjDpZ82Gp7ILisjeOrNdiHK?usp=sharing)] |
-
-### Test for paper result
-
-To test PointAttN on PCN benchmark, download  the pretrained model and put it into `PointAttN_cd_debug_pcn `directory, run:
-
-```
-python test_pcn.py -c PointAttN.yaml
+processed_jaw_data/
+├── train/
+│   ├── complete/000/        # 完整点云
+│   └── partial/000/        # 部分点云
+├── test/
+│   ├── complete/000/
+│   └── partial/000/
+├── PCN.json                # 数据集元数据
+└── category.txt            # 类别信息
 ```
 
-To test PointAttN on Completion3D benchmark, download  the pretrained model and put it into `PointAttN_cd_debug_c3d `directory, run:
+## 🎯 训练配置
 
+主要训练参数（cfgs/PointAttN_Jaw.yaml）：
+- `batch_size: 16` - 批次大小
+- `num_points: 2048` - 点云点数
+- `nepoch: 300` - 训练轮数
+- `lr: 0.0005` - 学习率
+- `pcnpath: ./processed_jaw_data` - 数据路径
+
+## 📈 性能优化
+
+- **多进程处理**: 使用16个进程并行处理
+- **快速采样**: 优化的点云采样算法
+- **内存优化**: 批量处理和流式处理
+- **GPU加速**: 支持CUDA加速（如果可用）
+
+## 🧪 测试和验证
+
+### 预处理测试
+```bash
+python test_preprocessing.py  # 测试环境和数据
+python test_exclusion.py      # 测试排除功能
 ```
-python test_c3d.py -c PointAttN.yaml
+
+### 模型测试
+```bash
+python test_pcn.py -c PointAttN.yaml    # PCN数据集测试
+python test_c3d.py -c PointAttN.yaml    # Completion3D测试
 ```
 
-## 4. Acknowledgement
+## 📚 原始论文
 
-1. We include the following PyTorch 3rd-party libraries:  
-   [1] [ChamferDistancePytorch](https://github.com/ThibaultGROUEIX/ChamferDistancePytorch)  
-   [2] [mm3d_pn2](https://github.com/Colin97/MSN-Point-Cloud-Completion)
+PointAttN: You Only Need Attention for Point Cloud Completion
+- **会议**: AAAI 2024
+- **性能**: Completion3D CD=6.63, PCN CD=6.86
 
-2. Some of the code of this project is borrowed from [VRC-Net](https://github.com/paul007pl/MVP_Benchmark)  
+## 🙏 致谢
 
-## 5. Cite this work
-
-If you use PointAttN in your work, please cite our paper:
-
-```
-@article{Wang_Cui_Guo_Li_Liu_Shen_2024,
-   title={PointAttN: You Only Need Attention for Point Cloud Completion},
-   volume={38}, 
-   url={https://ojs.aaai.org/index.php/AAAI/article/view/28356}, DOI={10.1609/aaai.v38i6.28356}, 
-   number={6}, 
-   journal={Proceedings of the AAAI Conference on Artificial Intelligence},
-   author={Wang, Jun and Cui, Ying and Guo, Dongyan and Li, Junxia and Liu, Qingshan and Shen, Chunhua},
-   year={2024},
-   month={Mar.},
-   pages={5472-5480}
-}
-```
+- [ChamferDistancePytorch](https://github.com/ThibaultGROUEIX/ChamferDistancePytorch)
+- [mm3d_pn2](https://github.com/Colin97/MSN-Point-Cloud-Completion)
+- [VRC-Net](https://github.com/paul007pl/MVP_Benchmark)
 
