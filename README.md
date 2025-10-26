@@ -125,9 +125,28 @@ PointAttN: You Only Need Attention for Point Cloud Completion
 - **会议**: AAAI 2024
 - **性能**: Completion3D CD=6.63, PCN CD=6.86
 
-## 🙏 致谢
+## 🆘 故障排除
 
-- [ChamferDistancePytorch](https://github.com/ThibaultGROUEIX/ChamferDistancePytorch)
-- [mm3d_pn2](https://github.com/Colin97/MSN-Point-Cloud-Completion)
-- [VRC-Net](https://github.com/paul007pl/MVP_Benchmark)
+### open3d依赖冲突
+如果遇到 `AttributeError: module 'typing_extensions' has no attribute 'TypeVar'` 错误：
+
+```bash
+# 手动修复
+pip install --upgrade typing_extensions
+pip uninstall open3d -y
+pip install open3d==0.13.0
+# 如果仍有问题，使用CPU版本
+pip install open3d-cpu
+```
+
+### 其他常见问题
+1. **CUDA错误**: 检查GPU驱动和PyTorch版本
+2. **内存不足**: 减小batch_size或num_workers
+3. **数据加载错误**: 运行test_preprocessing.py检查
+4. **训练不收敛**: 调整学习率或检查数据质量
+
+### 获取帮助
+- 查看详细文档: README.md
+- 检查训练日志: log/jaw_experiments/jaw_lower.log
+- 运行测试脚本: python test_preprocessing.py
 

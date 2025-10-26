@@ -119,21 +119,28 @@ def save_points_simple(points, filepath):
         # 保存为简单的文本格式（更快）
         np.savetxt(filepath.replace('.pcd', '.txt'), points, fmt='%.6f')
 
-        # 如果需要PCD格式，创建一个简单的PCD文件
-        with open(filepath, 'w') as f:
-            f.write("# .PCD v0.7 - Point Cloud Data file format\n")
-            f.write("VERSION 0.7\n")
-            f.write("FIELDS x y z\n")
-            f.write("SIZE 4 4 4\n")
-            f.write("TYPE F F F\n")
-            f.write("COUNT 1 1 1\n")
-            f.write(f"WIDTH {len(points)}\n")
-            f.write("HEIGHT 1\n")
-            f.write("VIEWPOINT 0 0 0 1 0 0 0\n")
-            f.write(f"POINTS {len(points)}\n")
-            f.write("DATA ascii\n")
-            for point in points:
-                f.write(f"{point[0]:.6f} {point[1]:.6f} {point[2]:.6f}\n")
+        # 尝试使用open3d保存PCD格式
+        try:
+            import open3d as o3d
+            pcd = o3d.geometry.PointCloud()
+            pcd.points = o3d.utility.Vector3dVector(points.astype(np.float64))
+            o3d.io.write_point_cloud(filepath, pcd)
+        except ImportError:
+            # 如果open3d不可用，使用纯文本PCD格式
+            with open(filepath, 'w') as f:
+                f.write("# .PCD v0.7 - Point Cloud Data file format\n")
+                f.write("VERSION 0.7\n")
+                f.write("FIELDS x y z\n")
+                f.write("SIZE 4 4 4\n")
+                f.write("TYPE F F F\n")
+                f.write("COUNT 1 1 1\n")
+                f.write(f"WIDTH {len(points)}\n")
+                f.write("HEIGHT 1\n")
+                f.write("VIEWPOINT 0 0 0 1 0 0 0\n")
+                f.write(f"POINTS {len(points)}\n")
+                f.write("DATA ascii\n")
+                for point in points:
+                    f.write(f"{point[0]:.6f} {point[1]:.6f} {point[2]:.6f}\n")
 
         return True
     except Exception as e:
