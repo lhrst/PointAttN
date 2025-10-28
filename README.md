@@ -56,9 +56,10 @@ PointAttN/
 
 ### 手动安装
 ```bash
-pip install -r requirements.txt
+# 安装基本依赖
+pip install trimesh open3d numpy torch torchvision pyyaml tqdm munch easydict transforms3d h5py scipy matplotlib tensorpack ninja mmcv-full
 
-# 编译第三方模块
+# 编译第三方模块（ninja会加速编译）
 cd utils/ChamferDistancePytorch/chamfer3D
 python setup.py install
 
@@ -137,6 +138,54 @@ pip uninstall open3d -y
 pip install open3d==0.13.0
 # 如果仍有问题，使用CPU版本
 pip install open3d-cpu
+```
+
+### PyTorch版本兼容性
+如果遇到 `THCState does not name a type`、`THC/THC.h: No such file or directory`、`tensor.type()` 或 `getCurrentCUDAStream` 错误：
+
+```bash
+# 方案1: 降级到PyTorch 1.9.0（推荐）
+pip install torch==1.9.0 torchvision==0.10.0
+
+# 方案2: 使用PyTorch 1.11+并自动修复（推荐）
+# setup.sh脚本会自动修复所有THC头文件和API问题
+
+# 方案3: 手动修复所有第三方模块
+find utils/ -type f \( -name '*.cpp' -o -name '*.cu' -o -name '*.cuh' \) -print0 \
+  | xargs -0 sed -i '/#include\s\+<THC\/THC\.h>/d'
+find utils/ -type f \( -name '*.cpp' -o -name '*.cu' -o -name '*.cuh' \) -print0 \
+  | xargs -0 sed -i 's/\.type()\.is_cuda()/\.is_cuda()/g'
+find utils/ -type f \( -name '*.cpp' -o -name '*.cu' -o -name '*.cuh' \) -print0 \
+  | xargs -0 sed -i '/extern THCState/d'
+find utils/ -type f \( -name '*.cpp' -o -name '*.cu' -o -name '*.cuh' \) -print0 \
+  | xargs -0 sed -i 's/at::cuda::getCurrentCUDAStream()\.stream()/cudaStreamDefault/g'
+find utils/ -type f \( -name '*.cpp' -o -name '*.cu' -o -name '*.cuh' \) -print0 \
+  | xargs -0 sed -i 's/at::cuda::getDefaultCUDAStream()\.stream()/cudaStreamDefault/g'
+
+# 方案4: 跳过第三方模块编译
+# 直接运行预处理和训练，使用CPU版本功能
+```
+
+### mmcv依赖问题
+如果遇到 `ModuleNotFoundError: No module named 'mmcv'` 或符号链接错误：
+
+```bash
+# 方案1: 安装兼容版本（推荐）
+pip install mmcv-full==1.7.1 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
+
+# 方案2: 安装更老版本
+pip install mmcv-full==1.6.0 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
+
+# 方案3: 安装CPU版本
+pip install mmcv-cpu
+
+# 方案4: 安装基础版本
+pip install mmcv
+
+# 方案5: 如果仍有问题，尝试重新安装PyTorch
+pip uninstall torch torchvision
+pip install torch==1.9.0 torchvision==0.10.0
+pip install mmcv-full==1.4.0 -f https://download.openmmlab.com/mmcv/dist/cu102/torch1.9.0/index.html
 ```
 
 ### 其他常见问题
